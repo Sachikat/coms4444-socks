@@ -142,14 +142,8 @@ class Player10(BasePlayer):
 	
 		if turn.budget_remaining >= PACK_COST and buy_pack:
 			leftovers = [k for k in range(len(offered)) if k not in (i, j)]
-			# check for socks at 64 or 127, discard them since there is a higher chance we won't need them 
-			# theriotically, having some type of pacing for buying packs would reduce the need to keep socks at the end of lifespan
-			capped_socks = [k for k in leftovers if offered[k] == 64 or offered[k] == 127]
-			if capped_socks:
-				discard.append(max(capped_socks, key=lambda k: abs(offered[k] - worn)))
-			else:
-				worst = max(leftovers, key=lambda k: abs(offered[k] - worn))
-				if abs(offered[worst] - worn) > THRESHOLD:
-					discard.append(worst)
+			worst = max(leftovers, key=lambda k: abs(offered[k] - worn))
+			if abs(offered[worst] - worn) > THRESHOLD:
+				discard.append(worst)
 
 		return Selection(wear=(i, j), discard=(tuple(discard)))
