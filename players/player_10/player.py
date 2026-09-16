@@ -14,8 +14,12 @@ This directory is not itself discovered - the registry only matches
 """
 
 from itertools import combinations
+
+from core.engine import PACK_COST
 from models.player import GameContext, PlayerSnapshot, Selection, TurnContext
 from models.player import Player as BasePlayer
+
+THRESHOLD = 6
 
 
 class Player10(BasePlayer):
@@ -111,6 +115,7 @@ class Player10(BasePlayer):
 		# ``budget_remaining`` is inf when no --budget was set, so this is
 		# always true on an unlimited run and false once leftover cannot
 		# cover a $10 pack.
+
 		if turn.budget_remaining >= PACK_COST:
 			# Throw out the leftover that sits furthest from what we just wore,
 			# on the theory that it is the one most likely to embarrass someone
