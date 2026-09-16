@@ -100,7 +100,29 @@ class Player10(BasePlayer):
 		"""
 		self.days_seen += 1
 
+		# GREEDY W/O DISCARD 
+		i, j = min(
+			combinations(range(len(offered)), 2), key=lambda p: abs(offered[p[0]] - offered[p[1]])
+		)
+		worn = (offered[i] + offered[j]) / 2
+
+		discard: list[int] = []
+		# ``budget_remaining`` is inf when no --budget was set, so this is
+		# always true on an unlimited run and false once leftover cannot
+		# cover a $10 pack.
+		if turn.budget_remaining >= PACK_COST:
+			# Throw out the leftover that sits furthest from what we just wore,
+			# on the theory that it is the one most likely to embarrass someone
+			# tomorrow.
+			leftovers = [k for k in range(len(offered)) if k not in (i, j)]
+			if leftovers:
+				worst = max(leftovers, key=lambda k: abs(offered[k] - worn))
+				if abs(offered[worst] - worn) > THRESHOLD:
+					discard.append(worst)
+
+		return Selection(wear=(i, j), discard=())
+
 		# Replace everything below with your strategy. This baseline wears the
 		# first two socks it is handed and never discards, which is the
 		# do-nothing behaviour a real strategy should beat.
-		return Selection(wear=(0, 1), discard=())
+		# return Selection(wear=(0, 1), discard=())
