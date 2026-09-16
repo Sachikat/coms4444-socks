@@ -13,6 +13,7 @@ This directory is not itself discovered - the registry only matches
 ``player_<digits>`` - so the template can never appear in a run as a competitor.
 """
 
+from itertools import combinations
 from models.player import GameContext, PlayerSnapshot, Selection, TurnContext
 from models.player import Player as BasePlayer
 
