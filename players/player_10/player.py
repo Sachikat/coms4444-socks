@@ -41,12 +41,12 @@ class Player10(BasePlayer):
 		# itself - you cannot preload state into an already-built object. Anything
 		# you want to carry between days lives on self, so initialise it here.
 		self.days_seen = 0
-	
+
 	def aging(self, shade: int) -> int:
-		# check how much a sock has aged 
-		if shade >= 127: # white sock      
+		# check how much a sock has aged
+		if shade >= 127:  # white sock
 			return 255 - shade
-		else:  # black sock               
+		else:  # black sock
 			return shade
 
 	def select_socks(self, offered: tuple[int, ...], turn: TurnContext) -> Selection:
@@ -114,20 +114,23 @@ class Player10(BasePlayer):
 
 		# check for all pairs within threshold of 6 since embarrassment is 0 for anything less than 6
 		pairs_within_threshold = [
-			p for p in combinations(range(len(offered)), 2) if abs(offered[p[0]] - offered[p[1]]) <= THRESHOLD	
+			p
+			for p in combinations(range(len(offered)), 2)
+			if abs(offered[p[0]] - offered[p[1]]) <= THRESHOLD
 		]
-		if pairs_within_threshold: #if there are pairs that fall within 6
-			#take the most extreme pair like closest to 255 since we want it to become more grey and uniform - white socks 
+		if pairs_within_threshold:  # if there are pairs that fall within 6
+			# take the most extreme pair like closest to 255 since we want it to become more grey and uniform - white socks
 			i, j = min(
 				pairs_within_threshold,
-				key=lambda p: self.aging(offered[p[0]]) + self.aging(offered[p[1]])
+				key=lambda p: self.aging(offered[p[0]]) + self.aging(offered[p[1]]),
 			)
 		else:
 			# if there are no pairs within threshold, be greedy
 			i, j = min(
-				combinations(range(len(offered)), 2), key=lambda p: abs(offered[p[0]] - offered[p[1]])
+				combinations(range(len(offered)), 2),
+				key=lambda p: abs(offered[p[0]] - offered[p[1]]),
 			)
-			
+
 		worn = (offered[i] + offered[j]) / 2
 
 		discard: list[int] = []
@@ -139,7 +142,7 @@ class Player10(BasePlayer):
 		else:
 			daily_rate = turn.budget_remaining / days_remaining
 			buy_pack = daily_rate >= (PACK_COST / 6)
-	
+
 		if turn.budget_remaining >= PACK_COST and buy_pack:
 			leftovers = [k for k in range(len(offered)) if k not in (i, j)]
 			worst = max(leftovers, key=lambda k: abs(offered[k] - worn))
