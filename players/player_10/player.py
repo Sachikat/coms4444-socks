@@ -45,7 +45,7 @@ class Player10(BasePlayer):
 	def aging(self, shade: int) -> int:
 		# check how much a sock has aged
 		if shade >= 127:  # white sock
-			return 255 - shade
+			return (255 - shade) / 2
 		else:  # black sock
 			return shade
 
