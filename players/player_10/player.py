@@ -116,17 +116,10 @@ class Player10(BasePlayer):
 		# Find the minimum embarrassment among all possible pairs
 		all_pairs = list(combinations(range(len(offered)), 2))
 
-		min_difference = min(
-			abs(offered[p[0]] - offered[p[1]])
-			for p in all_pairs
-		)
+		min_difference = min(abs(offered[p[0]] - offered[p[1]]) for p in all_pairs)
 
 		# Keep only pairs tied for the lowest embarrassment
-		best_pairs = [
-			p
-			for p in all_pairs
-			if abs(offered[p[0]] - offered[p[1]]) == min_difference
-		]
+		best_pairs = [p for p in all_pairs if abs(offered[p[0]] - offered[p[1]]) == min_difference]
 
 		# Among those:
 		# 1. prefer the pair with the greatest total aging
@@ -157,28 +150,17 @@ class Player10(BasePlayer):
 		#
 		# Always round l up to the nearest integer.
 
-		if turn.budget_remaining is None or turn.budget_remaining == float("inf"):
+		if turn.budget_remaining is None or turn.budget_remaining == float('inf'):
 			l = 0
 		elif turn.budget_remaining <= 0:
-			l = float("inf")
+			l = float('inf')
 		else:
-			l = math.ceil(
-				(10 * days_remaining * self.roommates)
-				/ (3 * turn.budget_remaining)
-			)
+			l = math.ceil((10 * days_remaining * self.roommates) / (3 * turn.budget_remaining))
 
 		# Look only at socks we are not wearing
-		leftovers = [
-			k
-			for k in range(len(offered))
-			if k not in (i, j)
-		]
+		leftovers = [k for k in range(len(offered)) if k not in (i, j)]
 
 		# Discard every leftover sock whose age is at least l
-		discard = [
-			k
-			for k in leftovers
-			if self.aging(offered[k]) >= l
-		]
+		discard = [k for k in leftovers if self.aging(offered[k]) >= l]
 
 		return Selection(wear=(i, j), discard=tuple(discard))
