@@ -13,8 +13,8 @@ This directory is not itself discovered - the registry only matches
 ``player_<digits>`` - so the template can never appear in a run as a competitor.
 """
 
+import math
 from itertools import combinations
-import math 
 
 from core.engine import PACK_COST
 from models.player import GameContext, PlayerSnapshot, Selection, TurnContext
