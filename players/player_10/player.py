@@ -16,7 +16,7 @@ This directory is not itself discovered - the registry only matches
 import math
 from itertools import combinations
 
-from core.engine import PACK_COST
+# from core.engine import PACK_COST
 from models.player import GameContext, PlayerSnapshot, Selection, TurnContext
 from models.player import Player as BasePlayer
 
@@ -151,16 +151,16 @@ class Player10(BasePlayer):
 		# Always round l up to the nearest integer.
 
 		if turn.budget_remaining is None or turn.budget_remaining == float('inf'):
-			l = 0
+			age_threshold = 0
 		elif turn.budget_remaining <= 0:
-			l = float('inf')
+			age_threshold = float('inf')
 		else:
-			l = math.ceil((10 * days_remaining * self.roommates) / (3 * turn.budget_remaining))
+			age_threshold = math.ceil((10 * days_remaining * self.roommates) / (3 * turn.budget_remaining))
 
 		# Look only at socks we are not wearing
 		leftovers = [k for k in range(len(offered)) if k not in (i, j)]
 
 		# Discard every leftover sock whose age is at least l
-		discard = [k for k in leftovers if self.aging(offered[k]) >= l]
+		discard = [k for k in leftovers if self.aging(offered[k]) >= age_threshold]
 
 		return Selection(wear=(i, j), discard=tuple(discard))
