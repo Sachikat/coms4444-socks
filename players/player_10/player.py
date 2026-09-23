@@ -157,7 +157,7 @@ class Player10(BasePlayer):
 		else:
 			age_threshold = math.ceil(
 				(10 * days_remaining * self.roommates) / (3 * turn.budget_remaining)
-				)
+			)
 
 		# Look only at socks we are not wearing
 		leftovers = [k for k in range(len(offered)) if k not in (i, j)]
