@@ -127,15 +127,19 @@ class Player10(BasePlayer):
 		min_embarrassment = min(embarrassment(p) for p in all_pairs)
 
 		# Keep every pair tied for that lowest embarrassment
-		best_pairs = [p for p in all_pairs if embarrassment(p) == min_embarrassment]
+		best_pairs = [
+			p
+			for p in all_pairs
+			if embarrassment(p) == min_embarrassment
+		]
 
 		# Among equally good embarrassment choices:
-		# 1. prefer the pair with the greatest total aging
+		# 1. prefer the pair with the least total aging (newest pair)
 		# 2. if still tied, prefer the pair with average shade closest to 0
 		i, j = min(
 			best_pairs,
 			key=lambda p: (
-				-(self.aging(offered[p[0]]) + self.aging(offered[p[1]])),
+				self.aging(offered[p[0]]) + self.aging(offered[p[1]]),
 				(offered[p[0]] + offered[p[1]]) / 2,
 			),
 		)
