@@ -113,26 +113,22 @@ class Player10(BasePlayer):
 		other groups.
 		"""
 		self.days_seen += 1
-		
+
 		# Generate every possible pair of offered socks
 		all_pairs = list(combinations(range(len(offered)), 2))
-		
+
 		# Calculate the actual embarrassment of a pair:
 		# differences of 6 or less all count as 0 embarrassment
 		def embarrassment(p):
 			difference = abs(offered[p[0]] - offered[p[1]])
 			return 0 if difference <= THRESHOLD else difference
-		
+
 		# Find the lowest possible embarrassment this turn
 		min_embarrassment = min(embarrassment(p) for p in all_pairs)
-		
+
 		# Keep every pair tied for that lowest embarrassment
-		best_pairs = [
-			p
-			for p in all_pairs
-			if embarrassment(p) == min_embarrassment
-		]
-		
+		best_pairs = [p for p in all_pairs if embarrassment(p) == min_embarrassment]
+
 		# Among equally good embarrassment choices:
 		# 1. prefer the pair with the greatest total aging
 		# 2. if still tied, prefer the pair with average shade closest to 0
