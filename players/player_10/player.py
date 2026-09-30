@@ -8,6 +8,10 @@ from models.player import GameContext, PlayerSnapshot, Selection, TurnContext
 from models.player import Player as BasePlayer
 
 THRESHOLD = 6
+AGE_CUT_LOW = 3
+AGE_CUT_MID = 7
+AGE_CUT_HIGH = 15
+USABLE_FRAC = 0.85
 
 class Player10(BasePlayer):
 	"""Group 10 sock-selection strategy."""
@@ -49,8 +53,7 @@ class Player10(BasePlayer):
 
 		if shade >= 127:  # white sock
 			return (255 - shade) / 2
-		else:  # black sock
-			return shade
+		return shade
 
 	def is_white(self, shade: int) -> bool:
 		"""Determine the original colour of a sock."""
