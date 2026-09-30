@@ -1,18 +1,3 @@
-"""Starting point for a group's player.
-
-Copy this whole directory to ``players/player_<k>/`` using your group number,
-then rename the class to ``Player<k>``. Group 4 would end up with
-``players/player_4/player.py`` containing ``class Player4``. The registry looks
-for exactly that; nothing else needs editing.
-
-Keep the ``__init__.py``. Discovery uses ``pkgutil.iter_modules``, which only
-reports directories that have one, so a group directory without it is silently
-invisible to the simulator - no error, just a player that never turns up.
-
-This directory is not itself discovered - the registry only matches
-``player_<digits>`` - so the template can never appear in a run as a competitor.
-"""
-
 import math
 from collections import deque
 from itertools import combinations
@@ -23,7 +8,6 @@ from models.player import GameContext, PlayerSnapshot, Selection, TurnContext
 from models.player import Player as BasePlayer
 
 THRESHOLD = 6
-
 
 class Player10(BasePlayer):
 	"""Group 10 sock-selection strategy."""
@@ -51,24 +35,14 @@ class Player10(BasePlayer):
 		#
 		#     history_size ~= (C / n) * selection_unit
 		#
-		self.history_size = max(
-			10,
-			math.ceil(
-				self.capacity
-				* self.selection_unit
-				/ self.roommates
-			),
-		)
+		self.history_size = 5
 
 		self.recent_black = deque(maxlen=self.history_size)
 		self.recent_white = deque(maxlen=self.history_size)
 
 		# Don't trust the estimated distribution until we have
 		# observed a reasonable amount of data for that colour.
-		self.min_observations = max(
-			8,
-			math.ceil(self.history_size * 0.25),
-		)
+		self.min_observations = 3
 
 	def aging(self, shade: int) -> float:
 		"""Estimate how many times a sock has been worn."""
@@ -100,10 +74,7 @@ class Player10(BasePlayer):
 		Calculate the average mismatch between a sock and a collection
 		of recently observed same-colour socks.
 		"""
-		return sum(
-			self.mismatch(shade, observed)
-			for observed in observations
-		) / len(observations)
+		return sum(self.mismatch(shade, observed) for observed in observations) / len(observations)
 
 	def distribution_stats(self, observations) -> tuple[float, float]:
 		"""
@@ -116,10 +87,7 @@ class Player10(BasePlayer):
 		"""
 		center = median(observations)
 
-		deviations = [
-			abs(shade - center)
-			for shade in observations
-		]
+		deviations = [abs(shade - center) for shade in observations]
 
 		spread = median(deviations)
 
@@ -181,16 +149,15 @@ class Player10(BasePlayer):
 		# Following Group 2's approximation, assume roughly C - 4 socks
 		# are available and split evenly between the two colours.
 		socks_per_colour = max(
-			(self.capacity - 4) / 2,
+			(self.capacity - 10) / 2,
 			0,
 		)
 
 		# Estimate remaining useful wears for white socks.
 		if self.recent_white:
-			avg_white_wears = sum(
-				self.remaining_wears(shade)
-				for shade in self.recent_white
-			) / len(self.recent_white)
+			avg_white_wears = sum(self.remaining_wears(shade) for shade in self.recent_white) / len(
+				self.recent_white
+			)
 		else:
 			# A pristine sock has approximately:
 			# 64 wears to terminal shade + 4 expected terminal wears.
@@ -198,24 +165,18 @@ class Player10(BasePlayer):
 
 		# Estimate remaining useful wears for black socks.
 		if self.recent_black:
-			avg_black_wears = sum(
-				self.remaining_wears(shade)
-				for shade in self.recent_black
-			) / len(self.recent_black)
+			avg_black_wears = sum(self.remaining_wears(shade) for shade in self.recent_black) / len(
+				self.recent_black
+			)
 		else:
 			avg_black_wears = 68
 
 		estimated_available_wears = (
-			socks_per_colour * avg_white_wears
-			+ socks_per_colour * avg_black_wears
+			socks_per_colour * avg_white_wears + socks_per_colour * avg_black_wears
 		)
 
 		# The household wears two socks per roommate per day.
-		future_wears_needed = (
-			2
-			* self.roommates
-			* days_remaining
-		)
+		future_wears_needed = 2 * self.roommates * days_remaining
 
 		wears_missing = max(
 			future_wears_needed - estimated_available_wears,
@@ -226,15 +187,10 @@ class Player10(BasePlayer):
 		# Each new sock contributes approximately 68 expected wears.
 		wears_per_pack = 6 * 68
 
-		future_packs_needed = math.ceil(
-			wears_missing / wears_per_pack
-		)
+		future_packs_needed = math.ceil(wears_missing / wears_per_pack)
 
 		# Reserve money for predicted future packs plus two safety packs.
-		return (
-			future_packs_needed * PACK_COST
-			+ 2 * PACK_COST
-		)
+		return future_packs_needed * PACK_COST + 2 * PACK_COST
 
 	def select_socks(
 		self,
@@ -249,63 +205,48 @@ class Player10(BasePlayer):
 		# STEP 1: CHOOSE WHICH SOCKS TO WEAR
 		# ==================================================
 
-		all_pairs = list(
-			combinations(range(len(offered)), 2)
-		)
+		all_pairs = list(combinations(range(len(offered)), 2))
 
 		def embarrassment(pair) -> int:
-			difference = abs(
-				offered[pair[0]]
-				- offered[pair[1]]
-			)
+			difference = abs(offered[pair[0]] - offered[pair[1]])
 
 			# All differences <= 6 have zero embarrassment.
-			return (
-				0
-				if difference <= THRESHOLD
-				else difference
-			)
+			return 0 if difference <= THRESHOLD else difference
 
 		# Find the lowest possible embarrassment this turn.
-		min_embarrassment = min(
-			embarrassment(pair)
-			for pair in all_pairs
-		)
+		min_embarrassment = min(embarrassment(pair) for pair in all_pairs)
 
 		# Keep every pair tied for that minimum embarrassment.
-		best_pairs = [
-			pair
-			for pair in all_pairs
-			if embarrassment(pair) == min_embarrassment
-		]
+		best_pairs = [pair for pair in all_pairs if embarrassment(pair) == min_embarrassment]
 
 		# Among equally good embarrassment choices:
 		#
 		# 1. Prefer the NEWEST pair (smallest total aging).
 		# 2. If still tied, prefer the pair whose average
 		#    shade is closest to 0.
+		def spread_change(pair):
+			change = 0.0
+			for index in pair:
+				shade = offered[index]
+				history = self.recent_white if self.is_white(shade) else self.recent_black
+				observations = list(history) + [
+					x for x in offered if self.is_white(x) == self.is_white(shade)
+				]
+				center = sum(observations) / len(observations)
+				aged = max(127, shade - 2) if self.is_white(shade) else min(64, shade + 1)
+				change += (aged - center) ** 2 - (shade - center) ** 2
+			return change
+
 		i, j = min(
 			best_pairs,
-			key=lambda pair: (
-				self.aging(offered[pair[0]])
-				+ self.aging(offered[pair[1]]),
-
-				(
-					offered[pair[0]]
-					+ offered[pair[1]]
-				) / 2,
-			),
+			key=lambda pair: (spread_change(pair), abs(offered[pair[0]] - offered[pair[1]]), pair),
 		)
 
 		# ==================================================
 		# STEP 2: IDENTIFY LEFTOVER SOCKS
 		# ==================================================
 
-		leftovers = [
-			k
-			for k in range(len(offered))
-			if k not in (i, j)
-		]
+		leftovers = [k for k in range(len(offered)) if k not in (i, j)]
 
 		discard: list[int] = []
 
@@ -320,14 +261,9 @@ class Player10(BasePlayer):
 
 		# Group 2 disables voluntary discards when five socks
 		# are being selected.
-		voluntary_discard_allowed = (
-			self.selection_unit < 5
-		)
+		voluntary_discard_allowed = self.selection_unit < 5
 
-		if (
-			turn.budget_remaining is None
-			or turn.budget_remaining == float("inf")
-		):
+		if turn.budget_remaining is None or turn.budget_remaining == float('inf'):
 			# Unlimited budget.
 			budget_safe = True
 
@@ -340,58 +276,37 @@ class Player10(BasePlayer):
 			else:
 				# Estimate how much money should be protected
 				# for future unavoidable replacements.
-				reserve = self.estimate_budget_reserve(
-					days_remaining
-				)
+				reserve = self.estimate_budget_reserve(days_remaining)
 
 				# Original household budget can be reconstructed as:
 				#
 				# spent so far + budget remaining
-				total_budget = (
-					turn.total_spent
-					+ turn.budget_remaining
-				)
+				total_budget = turn.total_spent + turn.budget_remaining
 
 				if total_budget > 0:
-					budget_fraction_remaining = (
-						turn.budget_remaining
-						/ total_budget
-					)
+					budget_fraction_remaining = turn.budget_remaining / total_budget
 				else:
 					budget_fraction_remaining = 0
 
-				time_fraction_remaining = (
-					days_remaining
-					/ self.days
-				)
+				time_fraction_remaining = days_remaining / self.days
 
 				# Only voluntarily discard when our remaining
 				# budget fraction is more than five percentage
 				# points ahead of the remaining time fraction.
-				ahead_of_schedule = (
-					budget_fraction_remaining
-					> time_fraction_remaining + 0.05
-				)
+				ahead_of_schedule = budget_fraction_remaining > time_fraction_remaining + 0.05
 
 				# Keep enough money for estimated future hole
 				# replacements plus another pack before choosing
 				# to spend voluntarily.
-				has_reserve = (
-					turn.budget_remaining
-					>= reserve + PACK_COST
-				)
+				has_reserve = turn.budget_remaining >= reserve + PACK_COST
 
-				budget_safe = (
-					ahead_of_schedule
-					and has_reserve
-				)
+				budget_safe = ahead_of_schedule and has_reserve
 
 		# ==================================================
 		# STEP 4: EVALUATE LEFTOVER SOCKS
 		# ==================================================
 
-		if voluntary_discard_allowed and budget_safe:
-
+		if voluntary_discard_allowed and budget_safe and days_remaining > 1:
 			candidates = []
 
 			for k in leftovers:
@@ -416,27 +331,13 @@ class Player10(BasePlayer):
 				# observed same-colour population?
 				# ------------------------------------------
 
-				center, spread = self.distribution_stats(
-					recent
-				)
-
 				# Adaptive threshold:
 				#
 				# At least 6, but larger when the observed
 				# distribution itself is broad.
-				too_far = max(
-					THRESHOLD,
-					3 * spread,
-				)
-
-				distance_from_distribution = abs(
-					shade - center
-				)
 
 				# If the sock fits comfortably inside the
 				# observed population, keep it.
-				if distance_from_distribution <= too_far:
-					continue
 
 				# ------------------------------------------
 				# Would replacing it actually improve
@@ -453,10 +354,7 @@ class Player10(BasePlayer):
 					recent,
 				)
 
-				improvement = (
-					current_mismatch
-					- replacement_mismatch
-				)
+				improvement = current_mismatch - replacement_mismatch
 
 				# The sock must not merely be unusual.
 				#
@@ -464,20 +362,14 @@ class Player10(BasePlayer):
 				# actually improve expected matching by
 				# more than the game's threshold.
 				if improvement > THRESHOLD:
-					candidates.append(
-						(improvement, k)
-					)
+					candidates.append((improvement, k))
 
 			# Group 2 discards at most ONE voluntary sock
 			# per turn.
 			if candidates:
-				_, worst_index = max(
-					candidates
-				)
+				_, worst_index = max(candidates)
 
-				discard.append(
-					worst_index
-				)
+				discard.append(worst_index)
 
 		# ==================================================
 		# STEP 5: UPDATE OUR OBSERVATION HISTORY
