@@ -103,10 +103,10 @@ class Player10(BasePlayer):
 		before we consider it unusually far away.
 
 		Narrow distribution:
-		    threshold approaches the game's natural threshold of 6.
+		threshold approaches the game's natural threshold of 6.
 
 		Wide distribution:
-		    threshold increases automatically.
+		threshold increases automatically.
 		"""
 		_, spread = self.distribution_stats(observations)
 
@@ -119,11 +119,9 @@ class Player10(BasePlayer):
 		"""
 		Estimate expected future wears before a sock develops a hole.
 
-		White:
-		    loses 2 shade units per wear until 127.
+		White: loses 2 shade units per wear until 127.
 
-		Black:
-		    gains 1 shade unit per wear until 64.
+		Black: gains 1 shade unit per wear until 64.
 
 		At the terminal shade, each wear has a 25% hole probability,
 		so expected additional wears are approximately 4.
