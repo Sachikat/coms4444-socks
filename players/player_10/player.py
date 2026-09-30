@@ -13,6 +13,7 @@ AGE_CUT_MID = 7
 AGE_CUT_HIGH = 15
 USABLE_FRAC = 0.85
 
+
 class Player10(BasePlayer):
 	"""Group 10 sock-selection strategy."""
 
